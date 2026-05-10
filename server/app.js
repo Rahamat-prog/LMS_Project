@@ -26,7 +26,7 @@ app.use(morgan('dev'));
 app.use('/api/v1/user', userRoutes);
 
 
-// initial router 
+// initial router - server created
 app.get('/', (req, res) => {
     res.status(200).json({
         success: true,
