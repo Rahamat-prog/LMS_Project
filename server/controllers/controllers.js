@@ -44,7 +44,7 @@ const register = async (req, res, next) => {
     }
 
     // TODO: file upload into db
-    
+
     if (req.file) {   // req.file is provided by Multer
         // console.log("file is ", req.file)
         try {
@@ -90,22 +90,20 @@ const register = async (req, res, next) => {
 
 }
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     try {
-        // if any filed is not provided 
         if (!email || !password) {
             return next(new AppError('All field is required', 400));
         }
 
         const user = await User.findOne({
             email
-        }).select('+password') // 
+        }).select('+password');
 
-        // now compire the provided email , password with the store one 
-        if (!user || !user.compairePassword('password')) {
-            return next(new AppError('provided passward or email is worng'))
+        if (!user || !user.compairePassword(password)) {
+            return next(new AppError('provided password or email is wrong', 400));
         }
 
         // store the token inside the cookie and make sure password is not pass as string so its must be undefined
@@ -125,34 +123,76 @@ const login = async (req, res) => {
 
 };
 
-const logout = (req) => {
-    res.cookie('token', null, {
-        secure: true,
-        maxAge: 0,
-        httpOnly: true
-    });
-
-    return res.status(200).json({
-        sucess: true,
-        message: "user is logout successfully "
-    })
-
-}
-
-const getProfile = async (req, res) => {
+const logout = (req, res, next) => {
     try {
-        const userId = req.user.id;
-        const user = await User.findById(userId)
+        res.cookie('token', null, {
+            secure: true,
+            maxAge: 0,
+            httpOnly: true
+        });
 
-        return res.status(2021).json({
+        return res.status(200).json({
             success: true,
-            message: " user details",
-            user
-        })
+            message: "user is logout successfully"
+        });
     } catch (error) {
-        return next(new AppError('faild to fetch the user profile', 400))
+        return next(new AppError(error.message, 500));
     }
 }
 
+const getProfile = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
 
-module.exports = { register, login, logout, getProfile };
+        return res.status(200).json({
+            success: true,
+            message: "user details",
+            user
+        });
+    } catch (error) {
+        return next(new AppError('failed to fetch the user profile', 400));
+    }
+}
+
+// forgotPassword logic
+const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return next(new AppError('email is not provided', 400));
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return next(new AppError('user not found with this email', 404));
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'password reset instructions sent to email'
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+}
+
+const resetPassword = async (req, res, next) => {
+    try {
+        const { token, password } = req.body;
+
+        if (!token || !password) {
+            return next(new AppError('token and password are required', 400));
+        }
+
+        return res.status(501).json({
+            success: false,
+            message: 'reset password is not implemented yet'
+        });
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+}
+
+module.exports = { register, login, logout, getProfile, forgotPassword, resetPassword };
