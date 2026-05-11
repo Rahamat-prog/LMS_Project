@@ -2,7 +2,7 @@ const AppError = require("../utils/errorUtils");
 const User = require('../models/userModel');
 const cloudinary = require('cloudinary');
 const fs = require('fs/promises');
-
+const sentEmail = require('../utils/sentEmail');
 // cookie option 
 const cookieOption = {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -169,13 +169,31 @@ const forgotPassword = async (req, res, next) => {
             return next(new AppError('user not found with this email', 404));
         }
 
-        return res.status(200).json({
-            success: true,
-            message: 'password reset instructions sent to email'
-        });
-    } catch (error) {
-        return next(new AppError(error.message, 500));
-    }
+        // token generate 
+        const resetToken = await user.generatePasswordResetToken();
+
+        // save the token 
+        await user.save();
+
+        const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        const subject = 'Reset Password';
+        const message = `You can reset your password by clicking <a href=${resetPasswordUrl} target="_blank">Reset your password</a>\nIf the above link does not work for some reason then copy paste this link in new tab ${resetPasswordUrl}.\n If you have not requested this, kindly ignore.`;
+        try {
+            await sentEmail(email, subject, message);
+            return res.status(200).json({
+                success: true,
+                message: `Password reset link has been sent to your email ${email}`
+            })
+        }catch(error) {
+            // if any error occor during sent an email 
+            user.forgotPasswordToken = undefined;
+            user.forgotPasswordExpiry = undefined;
+            return next(new AppError(error.message, 500));
+        }
+}catch(error) {
+     return next(new AppError(error.message, 500));
+}
 }
 
 const resetPassword = async (req, res, next) => {
