@@ -1,36 +1,18 @@
 # LMS Project
+A comprehensive Learning Management System backend built with Node.js, Express.js, and MongoDB. This system provides APIs for user management, course management, payment processing, and more.
 
-Short description of your project.
-
-Example:
-A full-stack Learning Management System (LMS) built using React, Node.js, Express, and MongoDB.
-
----
 
 # 🚀 Tech Stack
+Runtime: Node.js
+Framework: Express.js
+Database: MongoDB with Mongoose ODM
+Authentication: JSON Web Tokens (JWT)
+File Storage: Cloudinary
+Payment Gateway: Razorpay
+Email Service: Nodemailer
+Password Hashing: bcryptjs
+Development: Nodemon for auto-restart
 
-## Frontend
-
-- React.js
-- Redux Toolkit
-- Tailwind CSS
-
-## Backend
-
-- Node.js
-- Express.js
-
-## Database
-
-- MongoDB
-
-## Other Tools
-
-- JWT Authentication
-- Cloudinary
-- Razorpay / Stripe
-
----
 
 # ✨ Features
 
