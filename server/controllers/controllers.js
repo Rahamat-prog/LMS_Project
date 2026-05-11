@@ -171,11 +171,14 @@ const forgotPassword = async (req, res, next) => {
 
         // token generate 
         const resetToken = await user.generatePasswordResetToken();
+        console.log("resetToken", resetToken);
 
         // save the token 
         await user.save();
 
         const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+        // console.log("reset password link", resetPasswordUrl);
+
 
         const subject = 'Reset Password';
         const message = `You can reset your password by clicking <a href=${resetPasswordUrl} target="_blank">Reset your password</a>\nIf the above link does not work for some reason then copy paste this link in new tab ${resetPasswordUrl}.\n If you have not requested this, kindly ignore.`;
