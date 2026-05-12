@@ -52,15 +52,16 @@ const userSchema = new Schema({
 
 );
 
-// increpted the password before save into db
-userSchema.pre('save', function () {
+// encrypt the password before saving into DB
+userSchema.pre('save', async function () {
     if (!this.isModified('password')) {
         return;
     }
-    this.password = bcrypt.hash(this.password, 10)
-})
+    this.password = await bcrypt.hash(this.password, 10);
+});
 
-// generate jwt token 
+
+// generate jwt token   
 userSchema.methods = {
     generateJWTToken: function() {
         return  JWT.sign(
