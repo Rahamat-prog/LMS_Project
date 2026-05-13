@@ -128,12 +128,9 @@ const login = async (req, res, next) => {
 };
 
 const logout = (req, res, next) => {
-    try {
-        res.cookie('token', null, {
-            secure: true,
-            maxAge: 0,
-            httpOnly: true
-        });
+    try { 
+        // remove the token form the cookie 
+        res.cookie('token', null, {secure: true, maxAge: 0, httpOnly: true });
 
         return res.status(200).json({
             success: true,
@@ -162,40 +159,47 @@ const getProfile = async (req, res, next) => {
 // forgotPassword logic
 const forgotPassword = async (req, res, next) => {
     try {
+        // STEP 1: Extract email from request body
         const { email } = req.body;
 
+        // STEP 2: Validate all fields are provided
         if (!email) {
             return next(new AppError('email is not provided', 400));
         }
-
+        // STEP 3: Check if user already exists with same email ||  Query database: "Find user with this email"
         const user = await User.findOne({ email });
         if (!user) {
             return next(new AppError('user not found with this email', 404));
         }
 
-        // token generate 
+        // STEP 4: Generate password reset token
         const resetToken = await user.generatePasswordResetToken();
         // console.log("resetToken", resetToken);
 
-        // save the token 
+         // STEP 5: Save token and expiry to database
         await user.save();
 
+        // STEP 6: Create reset password URL
         const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-        console.log("reset password link", resetPasswordUrl);
+        // console.log("reset password link", resetPasswordUrl);
 
-
+        // STEP 7: Prepare email content
         const subject = 'Reset Password';
         const message = `You can reset your password by clicking <a href=${resetPasswordUrl} target="_blank">Reset your password</a>\nIf the above link does not work for some reason then copy paste this link in new tab ${resetPasswordUrl}.\n If you have not requested this, kindly ignore.`;
+        console.log("email link", message);
+        // STEP 8: Send email with reset link
         try {
             await sentEmail(email, subject, message);
+            // Email sent successfully
             return res.status(200).json({
                 success: true,
                 message: `Password reset link has been sent to your email ${email}`
             })
         }catch(error) {
-            // if any error occor during sent an email 
+            // STEP 9: If email fails, clean up tokens || Remove tokens from database since email wasn't sent
             user.forgotPasswordToken = undefined;
             user.forgotPasswordExpiry = undefined;
+            await user.save();
             return next(new AppError(error.message, 500));
         }
 }catch(error) {
@@ -206,33 +210,43 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
     try {
-        const { resetToken } = req.params;
-        const password = req.body?.password;
+        // STEP 1: Extract reset token from URL
+        const { resetToken } = req.params; 
 
+        // STEP 2: Extract new password from request body
+        const { password } = req.body;
+
+        // STEP 3: Validate password is provided
         if (!req.body || !password) {
             return next(new AppError('token and password are required. Ensure you send JSON body with a password field.', 400));
         }
 
+        // STEP 4: Hash the plain text token from URL // Remember: Token in database is hashed// Token in URL is plain text // We need to hash the URL token to compare with database
         const forgotPasswordToken = crypto
             .createHash('sha256')
             .update(resetToken)
-            .digest('hex');
-
+            .digest('hex');  // forgotPasswordToken = "$2b$10$hashed..." (same as in database)
+        
+        // STEP 5: Find user with matching hashed token AND token not expired
         const user = await User.findOne({
-            forgotPasswordToken,
-            forgotPasswordExpiry: { $gt: Date.now() }
+            forgotPasswordToken, //Token matches
+            forgotPasswordExpiry: { $gt: Date.now() } // Expiry not passed
         });
-
+         // STEP 6: Check if user found
         if (!user) {
             return next(new AppError('Token is expired or invalid, please try again', 400));
         }
+        // STEP 7: Update user's password
+        user.password = password; // Password will be auto-hashed by pre-save hook
 
-        user.password = password;
+        // STEP 8: Clear token fields (one-time use)
         user.forgotPasswordExpiry = undefined;
         user.forgotPasswordToken = undefined;
 
-        await user.save();
+        // STEP 9: Save to database
+        await user.save(); 
 
+        // STEP 10: Send success response
         return res.status(200).json({
             success: true,
             message: 'Password changed successfully'
@@ -242,32 +256,42 @@ const resetPassword = async (req, res, next) => {
     }
 }
 
-const changePassword = (req, res,) => {
+
+const changePassword = async (req, res,) => {
+
+    // STEP 1: Extract old and new passwords from request body
     const {oldPassword, newPassword} = req.body
+
+    // STEP 2: Extract user ID from authenticated request || id comes from JWT token (set by isLoging middleware)
     const {id} =  req.user;
 
+       // STEP 3: Validate both passwords are provided
     if (!oldPassword || !newPassword) {
-        return next(new AppError(error.message, 500));
+        return next(new AppError(error.message, 400));
     }
-    //find password
+    // STEP 4: Find user in database with password field included
     const user = await User.findById(id).select('+password')
 
+     // STEP 5: Check if user exists
     if(!user) {
-        return next(new AppError(error.message, 500));
+        return next(new AppError(error.message, 400));
     }
 
-    // if user is exit 
+    // STEP 6: Verify old password is correct
     const isPasswordValid = await user.compairePassword(oldPassword)  // bcrypt.compare does: // bcrypt.compare("myPass123", "$2b$10$N9qo8uLO...")
-
+    // STEP 7: Check if old password matches
     if (!isPasswordValid) {
         return next(new AppError(error.message, 500));
     }
-
+    // STEP 8: Update password to new one
     user.password = newPassword;
+
+    // STEP 9: Save to database ||  Pre-save hook automatically hashes the password
     await user.save();
 
+     // STEP 10: Remove password from response (security)
     user.password = undefined;
-
+    // STEP 11: Send success response
     res.status(200).json({
         success: true,
         message: "password changed successfully",
