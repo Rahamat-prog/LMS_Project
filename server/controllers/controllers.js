@@ -26,6 +26,7 @@ const register = async (req, res, next) => {
 
     // STEP 3: Check if user already exists with same email ||  Query database: "Find user with this email"
     const userExits = await User.findOne({ email });
+    console.log("userExits", userExits);
     if (userExits) {
         return next(new AppError('user is already exists', 400)); // Prevent duplicate registration
 

@@ -259,10 +259,10 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-**Developer**: [Your Name]
-- **Email**: your.email@example.com
-- **LinkedIn**: [Your LinkedIn Profile]
-- **GitHub**: [Your GitHub Profile]
+**Developer**: Rahamat Shaikh
+- **Email**: rahamatshaikhdeveloper@gmail.com
+- **LinkedIn**: https://www.linkedin.com/in/rahamat-shaikh-b71187228/
+- **GitHub**: https://github.com/Rahamat-prog
 
 ---
 
