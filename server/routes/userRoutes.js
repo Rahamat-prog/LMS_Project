@@ -6,7 +6,7 @@ const upload = require('../middlewares/multerMiddleware')
 // instance 
 const router = express.Router();
 
-// API define for different method
+// All user-related endpoints are prefixed with /api/v1/user
 router.post('/register', upload.single("avatar"), register);  // upload create req.file 
 router.post('/login',login);
 router.post('/logout',logout);

@@ -1,5 +1,6 @@
-const errorMiddleware = (err, req, res) => {
-// fallback error suppose you don't provide statuscode or anything wrong 
+
+const errorMiddleware = (err, req, res, next) => {
+// fallback error suppose you don't provide statuscode or anything wrong in the controller 
 err.statusCode = err.statusCode || 500;
 err.message = err.message || "something went wrong";
 

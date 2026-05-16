@@ -24,7 +24,7 @@ app.use(cookieParser());
 // show the error in the console if anyone want to sent req from the unknown api ||  morgan is a loger middleware for node.js
 app.use(morgan('dev'));
 
-// API define 
+// prefixed API
 app.use('/api/v1/user', userRoutes);
 
 
@@ -32,7 +32,7 @@ app.use('/api/v1/user', userRoutes);
 app.get('/', (req, res) => {
     res.status(200).json({
         success: true,
-        message : "pong"
+        message : `Initial server setup`
     })
 })
 
@@ -45,7 +45,7 @@ app.use( (req, res) => {
     })
 })
 
-// error middleware 
+// global error handler middleware run only when error is passed through next(err)
 app.use(errorMiddleware);
 
 module.exports = app;

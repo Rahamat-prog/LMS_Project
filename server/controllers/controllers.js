@@ -21,12 +21,12 @@ const register = async (req, res, next) => {
     // STEP 2: Validate all fields are provided
     if (!fullName || !email || !password) {
         // instance of error and next so a app mai jaye ga and dekega ki userRouter ke niche error midleware h to usmai next kar dega 
-        return next(new AppError('All field is required', 400))
+        return next(new AppError('All field is required', 400)) // next matlab jo bhi error aya h usko age bhej do (errorMiddleware) mai jisko app mai call kiya h.
     }
 
     // STEP 3: Check if user already exists with same email ||  Query database: "Find user with this email"
     const userExits = await User.findOne({ email });
-    console.log("userExits", userExits);
+    // console.log("find user", userExits); // null as user is not registerd already.
     if (userExits) {
         return next(new AppError('user is already exists', 400)); // Prevent duplicate registration
 
@@ -41,6 +41,7 @@ const register = async (req, res, next) => {
             secure_url: ''
         }
     })
+    // console.log("user detail", user)
     // STEP 5: Check if user created successfully
     if (!user) {
         return next(new AppError('user registration faild please try agian', 400));
@@ -48,9 +49,10 @@ const register = async (req, res, next) => {
 
     // STEP 6: Handle file upload (optional - if user uploads avatar) || req.file is provided by Multer || Contains: { filename, path, size, mimetype, etc }
     if (req.file) {  
-
+        // console.log("inside req.file", req.file)
         try { // call the uploadOnCloudinary function with the file path and go to utilis/cloudinary
            const result = await uploadOnCloudinary(req.file.path);
+            // console.log("result which is sent by cloudinary", result)
 
             //// Validate upload result
             if (!result) {
@@ -77,6 +79,7 @@ const register = async (req, res, next) => {
 
     // STEP 9: Generate JWT token 
     const token = await user.generateJWTToken();
+    // console.log("token", token)
 
     // STEP 10: Store token in cookie
     res.cookie('token', token, cookieOption)
@@ -117,7 +120,7 @@ const login = async (req, res, next) => {
         res.cookie('token', token, cookieOption);
 
         // sent the res if the user is login 
-        return res.status(200).json({
+        return res.status(200).json({ 
             success: true,  
             message: "usre is logged successfully",
             user

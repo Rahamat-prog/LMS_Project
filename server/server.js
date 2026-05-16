@@ -12,5 +12,3 @@ app.listen(PORT, async () => {
     await connectionToDB();
     console.log(`sever is running at http://localhost:${PORT}`)
 });
-
-
