@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const app = express();
 const userRoutes = require('./routes/userRoutes');
+const courseRouters = require('./routes/courseRouters');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
 
@@ -26,6 +27,7 @@ app.use(morgan('dev'));
 
 // prefixed API
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/courses', courseRouters);
 
 
 // initial router - server created
